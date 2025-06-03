@@ -1,0 +1,71 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+*.log
+
+# FastAPI / Uvicorn
+.env
+*.env
+*.db
+instance/
+*.sqlite3
+
+# VSCode / IDEs
+.vscode/
+.idea/
+*.swp
+
+# Virtual Environments
+venv/
+.venv/
+env/
+.env.bak
+.envrc
+
+# macOS
+.DS_Store
+
+# Ollama (if storing models locally)
+ollama_models/
+
+# Output / Cache
+.cache/
+*.bak
+*.tmp
+*.orig
+
+# Node.js (if you have frontend in same repo)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-lock.yaml
+
+# Test results
+htmlcov/
+coverage.*
+.cache/
+.tox/
+.pytest_cache/
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+
+# Local RAG docs
+documents/
+
+# Exported notebooks or intermediate data
+*.ipynb_checkpoints/
+*.csv
+*.tsv
+*.parquet
+*.jsonl
