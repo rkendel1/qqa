@@ -9,16 +9,19 @@ const fallbackResponses = [
 
 export async function generateCityHallResponse(message: string): Promise<string> {
   try {
-    const res = await fetch("http://localhost:8000/rag-query", {
+    // Note the key 'question' matches your backend QueryRequest model
+    const res = await fetch("http://localhost:8000/query", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ query: message }),
+      body: JSON.stringify({ question: message }),
     });
 
     const data = await res.json();
-    return data.response || "Sorry, I couldn't find an answer.";
+
+    // Your backend returns 'answer' inside the response body
+    return data.answer || fallbackResponses[0];
   } catch (error) {
     console.error("Error fetching RAG response:", error);
-    return "There was an error processing your request.";
+    return fallbackResponses[2];
   }
 }
