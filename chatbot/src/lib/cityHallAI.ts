@@ -7,13 +7,13 @@ const fallbackResponses = [
   "That topic may need human assistance. Try reaching out to City Hall directly."
 ];
 
-export async function generateCityHallResponse(message: string): Promise<string> {
+export async function generateCityHallResponse(payload: { input: string; context: Array<{ id: string; type: string; content: string; timestamp: Date }> }): Promise<string> {
   try {
-    // Note the key 'question' matches your backend QueryRequest model
+    // Send both the user input and the conversation context to the backend
     const res = await fetch("http://localhost:8000/query", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ question: message }),
+      body: JSON.stringify(payload),
     });
 
     const data = await res.json();
