@@ -42,7 +42,13 @@ export const ChatInterface = () => {
     setIsTyping(true);
 
     try {
-      const response = await generateCityHallResponse(inputMessage);
+      // Include recent messages (e.g., last 5 messages) in the payload
+      const payload = {
+        input: inputMessage,
+        context: messages.slice(-5), // Send the last 5 messages as context
+      };
+
+      const response = await generateCityHallResponse(payload); // Assume this function sends the payload to the backend
 
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
