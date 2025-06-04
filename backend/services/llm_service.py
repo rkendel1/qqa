@@ -1,7 +1,8 @@
+import os
 import requests
 import json
 import logging
-from typing import Generator, Dict, Any
+from typing import Generator, Union
 
 from config import Config
 from exceptions import LLMException
@@ -9,11 +10,16 @@ from exceptions import LLMException
 logger = logging.getLogger(__name__)
 
 class LLMService:
-    """Handles communication with Ollama LLM"""
+    """Handles communication with Ollama LLM, supporting local or container setup."""
     
     def __init__(self):
+        use_local_ollama = os.getenv("USE_LOCAL_OLLAMA", "true").lower() == "true"
+        if use_local_ollama:
+            self.base_url = "http://host.docker.internal:11434"  # Local Ollama
+        else:
+            self.base_url = "http://ollama:11434"  # Containerized Ollama
+
         self.config = Config()
-        self.base_url = self.config.OLLAMA_BASE_URL
     
     def is_available(self) -> bool:
         """Check if Ollama is available"""
@@ -23,8 +29,8 @@ class LLMService:
         except Exception:
             return False
     
-    def generate_response(self, prompt: str, stream: bool = False) -> str | Generator[str, None, None]:
-        """Generate response from LLM"""
+    def generate_response(self, prompt: str, stream: bool = False) -> Union[str, Generator[str, None, None]]:
+        """Generate response from Ollama LLM"""
         if not self.is_available():
             raise LLMException("Ollama service is not available")
         
@@ -62,3 +68,13 @@ class LLMService:
                         yield data["response"]
                 except json.JSONDecodeError:
                     continue
+
+    def query_mistral(self, prompt: str) -> dict:
+        """Query Mistral model at /api/v1/query endpoint"""
+        try:
+            response = requests.post(f"{self.base_url}/api/v1/query", json={"prompt": prompt}, timeout=30)
+            response.raise_for_status()
+            return response.json()
+        except requests.RequestException as e:
+            logger.error(f"Mistral query failed: {e}")
+            raise LLMException(f"Failed to query Mistral: {e}")
