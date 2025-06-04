@@ -13,3 +13,4 @@ class User(Base):
     last_name = Column(String, nullable=True)
     address = Column(String, nullable=True)
     verified = Column(Boolean, default=False)
+    
