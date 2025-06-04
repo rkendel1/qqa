@@ -146,3 +146,4 @@ class VectorStoreService:
     
     def get_vector_store(self):
         return self.vectorstore
+        
