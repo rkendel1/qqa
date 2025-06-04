@@ -128,8 +128,10 @@ class VectorStoreService:
         """Search for relevant documents"""
         if not self.vectorstore:
             raise VectorStoreException("Vector store not initialized")
-        
-        k = k or self.config.SIMILARITY_K
+
+        if k is None:
+            k = self.config.SIMILARITY_K
+
         try:
             return self.vectorstore.similarity_search(query, k=k)
         except Exception as e:
@@ -147,3 +149,18 @@ class VectorStoreService:
     def get_vector_store(self):
         return self.vectorstore
         
+    def get_context_sections(self, query: str, k: int = None) -> dict:
+        """Retrieve structured context sections for prompt assembly"""
+        documents = self.search_documents(query, k)
+        doc_text = "\n\n".join(doc.page_content for doc in documents)
+        return {
+            "retrieved_docs": doc_text,
+            "retrieved_chunks": [doc.page_content for doc in documents],
+            "sources": [
+                {
+                    "filename": doc.metadata.get("source"),
+                    "metadata": doc.metadata
+                }
+                for doc in documents
+            ],
+        }

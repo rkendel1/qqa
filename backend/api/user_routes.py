@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from pydantic import BaseModel
 
 from services.vector_store import VectorStoreService
@@ -12,9 +12,16 @@ from users.schemas import UserCreate, UserRead, UserLogin, Token
 router = APIRouter()
 
 # Request/Response models
+class ChatMessage(BaseModel):
+    type: str
+    content: str
+
 class QueryRequest(BaseModel):
     question: str
     k: int = 5
+    user_context: Optional[Dict[str, Any]] = None
+    system_context: Optional[str] = None
+    chat_history: Optional[List[ChatMessage]] = None
 
 class QueryResponse(BaseModel):
     answer: str
@@ -49,7 +56,13 @@ async def query_documents(
     """Query documents using RAG"""
     try:
         # Generate answer using RAG service (includes retrieval)
-        response_data = rag_service.query(request.question, max_results=request.k)
+        response_data = rag_service.query(
+            query=request.question,
+            user_context=request.user_context,
+            system_context=request.system_context,
+            chat_history=[msg.dict() for msg in request.chat_history] if request.chat_history else None,
+            max_results=request.k
+        )
         answer = response_data["response"]
         doc_sources = response_data.get("sources", [])
 

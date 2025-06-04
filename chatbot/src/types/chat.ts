@@ -1,4 +1,4 @@
-export type MessageType = 'user' | 'assistant';
+export type MessageType = 'user' | 'assistant' | 'system';
 
 export interface Message {
   id: string;

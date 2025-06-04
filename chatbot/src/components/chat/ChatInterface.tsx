@@ -23,6 +23,10 @@ export const ChatInterface = () => {
   const messageEndRef = useRef<HTMLDivElement | null>(null);
   const scrollAreaRef = useRef<HTMLDivElement | null>(null);
 
+  // Example user and system context (replace with real context provider as needed)
+  const userContext = { address: "7 Spinnaker Ln" };
+  const systemContext = "You are a helpful municipal assistant.";
+
   useEffect(() => {
     messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
@@ -42,8 +46,15 @@ export const ChatInterface = () => {
     setIsTyping(true);
 
     try {
+      // Prepare chat history excluding latest user message for prompt
+      const chatHistory = [...messages, userMessage].filter(
+        (m) => m.type !== 'system' && m.id !== userMessage.id
+      );
+
       const response = await generateCityHallResponse({
-        messages: [...messages, userMessage]
+        messages: [...messages, userMessage],
+        userContext,
+        systemContext,
       });
 
       const assistantMessage: Message = {
