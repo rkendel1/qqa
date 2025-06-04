@@ -146,3 +146,18 @@ class VectorStoreService:
     
     def get_vector_store(self):
         return self.vectorstore
+
+def store_user_context(self, user_id: int, context: dict):
+    """
+    Store or update user-specific context.
+    """
+    try:
+        # Assuming self.vectorstore supports a method to store user data
+        self.vectorstore.add_documents([{
+            "user_id": user_id,
+            "context": context
+        }])
+        logger.info(f"Successfully stored context for user {user_id}")
+    except Exception as e:
+        logger.error(f"Failed to store user context: {e}")
+        raise VectorStoreException(f"Context storage failed: {e}")
