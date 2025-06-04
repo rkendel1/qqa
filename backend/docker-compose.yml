@@ -1,11 +1,10 @@
-version: "3.9"
 services:
   backend:
     build:
       context: ./backend
     ports:
       - "8000:8000"
-    volumes:
-      - ./backend:/app
+    extra_hosts:
+      - "host.docker.internal:host-gateway"  # Maps 'host.docker.internal' to the host machine
     environment:
       - PYTHONUNBUFFERED=1
