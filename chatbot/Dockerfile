@@ -1,0 +1,7 @@
+FROM node:18-slim
+WORKDIR /app
+COPY . .
+RUN npm install
+RUN npm run dev
+EXPOSE 3000
+CMD ["npm", "run", "dev"]
