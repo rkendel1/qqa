@@ -176,5 +176,21 @@ def main():
     elif args.mode == "cli":
         start_cli()
 
+def quick_start():
+    """Quickly start the backend in API mode with minimal setup"""
+    logger.info("🚀 Quick Start: Initializing and starting the backend in API mode...")
+    
+    # Initialize Service Manager
+    service_manager = ServiceManager()
+    if not service_manager.initialize_services():
+        logger.error("❌ Failed to initialize services. Exiting.")
+        sys.exit(1)
+
+    # Start API Server
+    start_api()
+
+if __name__ == "__main__":
+    quick_start()
+
 if __name__ == "__main__":
     main()
