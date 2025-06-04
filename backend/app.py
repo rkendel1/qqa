@@ -1,5 +1,7 @@
 # app.py
-
+import os, sys
+print("cwd:", os.getcwd())
+print("sys.path:", sys.path)
 import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -10,11 +12,18 @@ from services.vector_store import VectorStoreService
 from services.llm_service import LLMService
 from services.rag_service import RAGService
 from dependencies import app_services  # Import shared service registry
-from api.routes import router as rag_router
+
 from api.auth_routes import router as auth_router
+from api.user_routes import router as rag_router
 from users.models import User
 from users.auth import hash_password, verify_password
 from users.schemas import UserCreate, UserRead, UserLogin, Token
+
+
+
+project_root = os.path.dirname(os.path.abspath(__file__))
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
 
 
 # Logging config

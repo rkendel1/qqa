@@ -1,11 +1,26 @@
 """
 Unified entry point for the Civic Nexus RAG system
 """
-import sys
 import argparse
 import subprocess
 import logging
 from pathlib import Path
+import sys
+import os
+
+# Determine project root (folder containing start.py)
+PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+
+def setup_environment():
+    # Change current working directory to project root
+    os.chdir(PROJECT_ROOT)
+    # Ensure project root is in sys.path
+    if PROJECT_ROOT not in sys.path:
+        sys.path.insert(0, PROJECT_ROOT)
+
+# Call setup_environment() early, before any imports that depend on paths
+setup_environment()
+
 
 # Import your services
 from services.vector_store import VectorStoreService
@@ -111,9 +126,9 @@ def start_api():
     logger.info("🚀 Starting API server...")
     
     # The FastAPI app will handle service initialization via lifespan events
-    # Start the API server
+    # Start the API server with hot reload using uvicorn
     try:
-        subprocess.run([sys.executable, "app.py"])
+        subprocess.run([sys.executable, "-m", "uvicorn", "app:app", "--reload"])
     except KeyboardInterrupt:
         logger.info("🛑 API server stopped by user")
     except Exception as e:
