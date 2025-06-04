@@ -11,10 +11,18 @@ logger = logging.getLogger(__name__)
 class LLMService:
     """Handles communication with Ollama LLM"""
     
-    def __init__(self):
-        self.config = Config()
-        self.base_url = self.config.OLLAMA_BASE_URL
-    
+    import requests
+
+class LLMService:
+    def __init__(self, base_url="http://host.docker.internal:11434"):
+        self.base_url = base_url
+
+    def query_mistral(self, prompt):
+        response = requests.post(f"{self.base_url}/api/v1/query", json={"prompt": prompt})
+        if response.status_code == 200:
+            return response.json()
+        else:
+            raise Exception(f"Error querying Mistral: {response.text}")
     def is_available(self) -> bool:
         """Check if Ollama is available"""
         try:
