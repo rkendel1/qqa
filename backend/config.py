@@ -16,6 +16,9 @@ class Config:
     CHUNK_OVERLAP = 100
     SIMILARITY_K = 5
 
+   
+    CONTEXT_MAX_SIZE = 1024  # Max size for context in bytes or characters 
+
     # Ollama or other LLM backends (optional)
     OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "mistral")
     OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
