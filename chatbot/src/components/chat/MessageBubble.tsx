@@ -3,7 +3,7 @@ import React from 'react';
 import { cn } from '@/lib/utils';
 import { Bot, User, Shield, Eye } from 'lucide-react';
 import { MessageType, Message } from '@/types/chat';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow, parseISO } from 'date-fns';
 
 interface MessageBubbleProps {
   message: Message;
@@ -43,7 +43,7 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
           {message.content}
         </div>
         <div className={cn("text-xs mt-1", isUser ? "text-blue-200" : "text-slate-500")}>
-          {formatDistanceToNow(message.timestamp, { addSuffix: true })}
+          {formatDistanceToNow(parseISO(message.timestamp), { addSuffix: true })}
         </div>
       </div>
     </div>

@@ -5,8 +5,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Send, Bot } from 'lucide-react';
 import { MessageBubble } from './MessageBubble';
 import { Message } from '@/types/chat';
-import { generateCityHallResponse } from '@/lib/cityHallAI';
 import { cn } from '@/lib/utils';
+import { generateCityHallResponse } from '@/lib/chatService';
 
 export const ChatInterface = () => {
   const [messages, setMessages] = useState<Message[]>([
@@ -15,7 +15,7 @@ export const ChatInterface = () => {
       type: 'assistant',
       content:
         "Hello! I'm your City Hall Assistant. How can I help you today? You can ask me about permits, zoning, city services, or other municipal questions.",
-      timestamp: new Date(),
+      timestamp: new Date().toISOString(),
     },
   ]);
   const [inputMessage, setInputMessage] = useState('');
@@ -34,7 +34,7 @@ export const ChatInterface = () => {
       id: Date.now().toString(),
       type: 'user',
       content: inputMessage,
-      timestamp: new Date(),
+      timestamp: new Date().toISOString(),
     };
 
     setMessages((prev) => [...prev, userMessage]);
@@ -42,13 +42,15 @@ export const ChatInterface = () => {
     setIsTyping(true);
 
     try {
-      const response = await generateCityHallResponse([...messages, userMessage]);
+      const response = await generateCityHallResponse({
+        messages: [...messages, userMessage]
+      });
 
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         type: 'assistant',
         content: response,
-        timestamp: new Date(),
+        timestamp: new Date().toISOString(),
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
@@ -59,7 +61,7 @@ export const ChatInterface = () => {
           id: (Date.now() + 2).toString(),
           type: 'assistant',
           content: 'Error contacting the assistant. Please try again later.',
-          timestamp: new Date(),
+          timestamp: new Date().toISOString(),
         },
       ]);
     } finally {
