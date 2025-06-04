@@ -1,7 +1,4 @@
-from sqlalchemy import Boolean, Column, Integer, String
-from sqlalchemy.ext.declarative import declarative_base
-
-Base = declarative_base()
+from sqlalchemy import JSON
 
 class User(Base):
     __tablename__ = "users"
@@ -13,4 +10,4 @@ class User(Base):
     last_name = Column(String, nullable=True)
     address = Column(String, nullable=True)
     verified = Column(Boolean, default=False)
-    
+    context = Column(JSON, nullable=True)  # Add this field to store context as JSON
