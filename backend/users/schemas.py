@@ -26,3 +26,14 @@ class UserLogin(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str
+    
+
+class AuthResponse(BaseModel):
+    id: int
+    email: str
+    first_name: str
+    last_name: str
+    address: str
+    verified: bool
+    access_token: str
+    token_type: str = "bearer"

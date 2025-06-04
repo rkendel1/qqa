@@ -14,7 +14,9 @@ export const MessageBubble = ({ message }: MessageBubbleProps) => {
   
   const getUserIcon = () => {
     // This would dynamically change based on user auth level in a real app
-    const userType = localStorage.getItem('userType') || 'anonymous';
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const accessToken = localStorage.getItem('access_token');
+    const userType = accessToken ? (user.verified ? 'verified' : 'registered') : 'anonymous';
     
     if (userType === 'verified') return Shield;
     if (userType === 'registered') return User;

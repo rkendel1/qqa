@@ -1,15 +1,39 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { User, Shield, Eye, LogIn, UserPlus } from 'lucide-react';
 import { LoginModal } from './LoginModal';
+import { getFullName } from '@/utils/userUtils';
 
 type UserType = 'anonymous' | 'registered' | 'verified';
 
+// Helper to get auth data and user info
 export const UserButton = () => {
   const [userType, setUserType] = useState<UserType>('anonymous');
+  const [userName, setUserName] = useState<string>('John Doe');
   const [showLoginModal, setShowLoginModal] = useState(false);
+
+  useEffect(() => {
+    const updateUserFromStorage = () => {
+      const user = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('user') || '{}') : {};
+      const access_token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+      const type: UserType = access_token ? (user.verified ? 'verified' : 'registered') : 'anonymous';
+      const name = getFullName(user);
+      setUserType(type);
+      setUserName(name);
+    };
+
+    updateUserFromStorage();
+
+    const handleStorageChange = () => {
+      updateUserFromStorage();
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
 
   const getUserInfo = () => {
     switch (userType) {
@@ -23,14 +47,14 @@ export const UserButton = () => {
       case 'registered':
         return {
           icon: User,
-          label: 'John Doe',
+          label: userName,
           badge: 'Registered',
           badgeColor: 'bg-blue-500'
         };
       case 'verified':
         return {
           icon: Shield,
-          label: 'John Doe',
+          label: userName,
           badge: 'Verified Resident',
           badgeColor: 'bg-green-500'
         };
@@ -79,7 +103,10 @@ export const UserButton = () => {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setUserType('anonymous')}
+              onClick={() => {
+                localStorage.clear();
+                window.dispatchEvent(new Event('storage'));
+              }}
             >
               Sign Out
             </Button>

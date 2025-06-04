@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import {
   Dialog,
@@ -44,6 +43,17 @@ export const LoginModal = ({ isOpen, onClose, onLogin }: LoginModalProps) => {
       });
       if (!res.ok) throw new Error('Login failed');
       const data = await res.json();
+      localStorage.setItem('user', JSON.stringify({
+        id: data.id,
+        email: data.email,
+        first_name: data.first_name,
+        last_name: data.last_name,
+        address: data.address,
+        verified: data.verified,
+      }));
+      localStorage.setItem('access_token', data.access_token);
+      localStorage.setItem('token_type', data.token_type);
+      window.dispatchEvent(new Event('storage'));
       toast.success("Successfully signed in!");
       onLogin(isVerified ? 'verified' : 'registered');
     } catch (err) {
@@ -67,6 +77,17 @@ export const LoginModal = ({ isOpen, onClose, onLogin }: LoginModalProps) => {
       });
       if (!res.ok) throw new Error('Registration failed');
       const data = await res.json();
+      localStorage.setItem('user', JSON.stringify({
+        id: data.id,
+        email: data.email,
+        first_name: data.first_name,
+        last_name: data.last_name,
+        address: data.address,
+        verified: data.verified,
+      }));
+      localStorage.setItem('access_token', data.access_token);
+      localStorage.setItem('token_type', data.token_type);
+      window.dispatchEvent(new Event('storage'));
       toast.success("Account created successfully!");
       onLogin(isVerified ? 'verified' : 'registered');
     } catch (err) {

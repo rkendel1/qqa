@@ -42,7 +42,7 @@ export const ChatInterface = () => {
     setIsTyping(true);
 
     try {
-      const response = await generateCityHallResponse(inputMessage);
+      const response = await generateCityHallResponse([...messages, userMessage]);
 
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
