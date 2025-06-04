@@ -1,0 +1,34 @@
+version: "3.9"
+services:
+  backend:
+    build:
+      context: ./backend
+    ports:
+      - "8000:8000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"  # Used for accessing local Ollama
+    volumes:
+      - ./backend:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+      - USE_LOCAL_OLLAMA=${USE_LOCAL_OLLAMA:-true}  # Default to using local Ollama
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+    stdin_open: true
+    tty: true
+
+  ollama:
+    image: ollama/mistral:latest
+    container_name: mistral
+    ports:
+      - "11434:11434"
+    volumes:
+      - ./ollama-data:/data
+    deploy:
+      replicas: ${USE_LOCAL_OLLAMA:-0}  # Only start Ollama container if USE_LOCAL_OLLAMA=false
