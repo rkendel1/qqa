@@ -1,77 +1,29 @@
 # app.py
-import os, sys
-print("cwd:", os.getcwd())
-print("sys.path:", sys.path)
 import logging
-from fastapi import FastAPI, HTTPException, Depends, Request
+from fastapi import FastAPI, HTTPException, Depends, Request, Body
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-from fastapi.responses import StreamingResponse
-from fastapi import Body
-from models import QueryRequest
-from dependencies import get_rag_service
-from slowapi import Limiter, _rate_limit_exceeded_handler
+from fastapi.responses import JSONResponse, StreamingResponse
+from slowapi import Limiter
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
-from typing import Dict, Any, Optional
-import uvicorn
 
 from config import settings
-from services.vector_store import VectorStoreService
-from services.llm_service import LLMService
-from services.rag_service import RAGService
-from dependencies import app_services  # Import shared service registry
 from models import QueryRequest, QueryResponse
 from exceptions import RAGException
 from monitoring import setup_monitoring, get_tracer
-
 from api.auth_routes import router as auth_router
 from api.user_routes import router as rag_router
-from users.models import User
-from users.auth import hash_password, verify_password
-from users.schemas import UserCreate, UserRead, UserLogin, Token
+from users.database import engine
+from users.models import Base
 
-users_router = auth_router
-
-
-app = FastAPI()
-
-app.include_router(auth_router, prefix="/auth", tags=["users"])
-app.include_router(rag_router, prefix="/api", tags=["RAG API"])
-
-
-
-
-
-project_root = os.path.dirname(os.path.abspath(__file__))
-if project_root not in sys.path:
-    sys.path.insert(0, project_root)
-
-
-# Logging config
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-class ServiceManager:
-    def __init__(self):
-        self.vector_service = VectorStoreService()
-        self.llm_service = LLMService()
-        self.rag_service = RAGService(
-            vector_service=self.vector_service,
-            llm_service=self.llm_service
-        )
+# Initialize FastAPI app
+app = FastAPI(title="Civic Nexus RAG API")
 
-    def initialize_services(self):
-        # Optional initialization logic
-        return True
-    
-    def get_services(self):
-        return {
-            "vector_service": self.vector_service,
-            "llm_service": self.llm_service,
-            "rag_service": self.rag_service
-        }
-
+# Add routers
+app.include_router(auth_router, prefix="/auth", tags=["Authentication"])
+app.include_router(rag_router, prefix="/api", tags=["RAG API"])
 
 # Setup rate limiter
 limiter = Limiter(key_func=get_remote_address)
@@ -96,26 +48,20 @@ app.add_middleware(
 # Setup monitoring
 setup_monitoring(app)
 
-# Initialize ServiceManager and get shared services
-service_manager = ServiceManager()
-service_manager.initialize_services()
+@app.on_event("startup")
+async def startup_event():
+    """Initialize database on startup"""
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    logger.info("Database initialized")
 
-# vector_service = service_manager.vector_service
-# llm_service = service_manager.llm_service
-# rag_service = service_manager.rag_service
-
-app.state.vector_service = service_manager.vector_service
-app.state.llm_service = service_manager.llm_service
-app.state.rag_service = service_manager.rag_service
-
+# Your existing endpoints...
 @app.get("/")
 async def root():
-    """Root endpoint"""
-    return {"message": "RAG API is running"}
+    return {"message": "Civic Nexus RAG API is running"}
 
 @app.get("/health")
 async def health_check(request: Request):
-    """Health check endpoint"""
     rag_service = request.app.state.rag_service
     return rag_service.get_status()
 
