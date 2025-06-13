@@ -17,8 +17,8 @@ interface ChatInterfaceProps {
 }
 
 export const ChatInterface: React.FC<ChatInterfaceProps> = ({
-  userContext = { address: "7 Spinnaker Ln" },
-  systemContext = "You are a helpful municipal assistant.",
+  userContext = "",
+  systemContext = "",
   className,
   maxMessages = 100,
   onError,
