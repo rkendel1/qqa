@@ -8,20 +8,31 @@ import { Message } from '@/types/chat';
 import { cn } from '@/lib/utils';
 import { generateCityHallResponse } from '@/lib/chatService';
 
+// Enhanced user data interface for better type safety
+interface UserData {
+  verified?: boolean;
+  name?: string;
+  id?: string;
+}
+
 interface ChatInterfaceProps {
-  userContext?: { address?: string; userId?: string };
+  userContext?: { userId?: string };
   systemContext?: string;
   className?: string;
   maxMessages?: number;
   onError?: (error: Error) => void;
+  currentUser?: UserData;
+  accessToken?: string;
 }
 
 export const ChatInterface: React.FC<ChatInterfaceProps> = ({
-  userContext = "",
+  userContext = {},
   systemContext = "",
   className,
   maxMessages = 100,
   onError,
+  currentUser,
+  accessToken,
 }) => {
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -257,7 +268,9 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
             <MessageBubble 
               key={message.id} 
               message={message}
-              onCopy={() => copyToClipboard(message.content)}
+              currentUser={currentUser}
+              accessToken={accessToken}
+              className={message.isError ? 'opacity-75' : ''}
             />
           ))}
 
