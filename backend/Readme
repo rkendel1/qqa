@@ -1,0 +1,164 @@
+To implement OpenAPI documentation and CURL commands for testing all endpoints, you can follow these steps:
+
+---
+
+### **OpenAPI Documentation**
+FastAPI already generates OpenAPI documentation automatically. You can access the OpenAPI schema by visiting `/docs` for a Swagger UI or `/redoc` for Redoc documentation. To ensure all endpoints are properly documented, you should:
+1. Add detailed descriptions to endpoints and models.
+2. Include example data for request and response models.
+
+Here's how to enhance the documentation:
+
+#### Example for `/query` Endpoint:
+```python
+@app.post("/query", response_model=QueryResponse, tags=["Queries"])
+@limiter.limit(f"{settings.RATE_LIMIT_REQUESTS}/minute")
+async def query(
+    request: Request,
+    query: QueryRequest = Body(
+        ..., 
+        example={
+            "question": "What is the capital of France?",
+            "k": 5,
+            "user_context": {"role": "student"},
+            "system_context": "Provide concise answers.",
+            "chat_history": [
+                {"type": "user", "content": "Tell me about Europe."},
+                {"type": "assistant", "content": "Europe is a continent with 44 countries."}
+            ]
+        }
+    )
+):
+    """
+    Query endpoint with rate limiting.
+    
+    - **question**: The user's question.
+    - **k**: Number of documents to retrieve.
+    - **user_context**: Context about the user (optional).
+    - **system_context**: Instructions for the response generation (optional).
+    - **chat_history**: Previous conversation messages (optional).
+    """
+    rag_service = request.app.state.rag_service
+    try:
+        response = rag_service.query(
+            query=query.question,
+            user_context=query.user_context,
+            system_context=query.system_context or "",
+            chat_history=query.chat_history,
+            max_results=query.max_results,
+            stream=query.stream,
+            temperature=query.temperature,
+            max_tokens=query.max_tokens
+        )
+        return response
+    except RAGException as e:
+        logger.error(f"RAG error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+```
+
+---
+
+### **CURL Commands for Testing**
+Below are CURL commands for testing each endpoint:
+
+#### **Authentication**
+1. **Sign Up**:
+   ```bash
+   curl -X POST http://127.0.0.1:8000/auth/signup \
+   -H "Content-Type: application/json" \
+   -d '{
+       "email": "test@example.com",
+       "password": "securepassword",
+       "first_name": "John",
+       "last_name": "Doe",
+       "address": "123 Main St",
+       "verified": false
+   }'
+   ```
+
+2. **Login**:
+   ```bash
+   curl -X POST http://127.0.0.1:8000/auth/login \
+   -H "Content-Type: application/json" \
+   -d '{
+       "email": "test@example.com",
+       "password": "securepassword"
+   }'
+   ```
+
+#### **Document Management**
+3. **Get Documents**:
+   ```bash
+   curl -X GET http://127.0.0.1:8000/documents
+   ```
+
+4. **Ingest Documents**:
+   ```bash
+   curl -X POST http://127.0.0.1:8000/ingest
+   ```
+
+#### **Querying**
+5. **Query Documents**:
+   ```bash
+   curl -X POST http://127.0.0.1:8000/query \
+   -H "Content-Type: application/json" \
+   -d '{
+       "question": "What is the capital of France?",
+       "k": 5,
+       "user_context": {"role": "student"},
+       "system_context": "Provide concise answers.",
+       "chat_history": [
+           {"type": "user", "content": "Tell me about Europe."},
+           {"type": "assistant", "content": "Europe is a continent with 44 countries."}
+       ]
+   }'
+   ```
+
+6. **Query with Sanity Check**:
+   ```bash
+   curl -X POST http://127.0.0.1:8000/query_with_sanity_check \
+   -H "Content-Type: application/json" \
+   -d '{
+       "question": "What is the capital of France?",
+       "max_results": 5,
+       "temperature": 0.7,
+       "max_tokens": 512
+   }'
+   ```
+
+7. **Stream Query Responses**:
+   ```bash
+   curl -X POST http://127.0.0.1:8000/query/stream \
+   -H "Content-Type: application/json" \
+   -d '{
+       "question": "What is the capital of France?",
+       "k": 5,
+       "user_context": {"role": "student"},
+       "system_context": "Provide concise answers.",
+       "chat_history": [
+           {"type": "user", "content": "Tell me about Europe."},
+           {"type": "assistant", "content": "Europe is a continent with 44 countries."}
+       ]
+   }'
+   ```
+
+#### **Cache Management**
+8. **Clear Cache**:
+   ```bash
+   curl -X DELETE http://127.0.0.1:8000/cache
+   ```
+
+#### **Health Check**
+9. **Check API Health**:
+   ```bash
+   curl -X GET http://127.0.0.1:8000/health
+   ```
+
+---
+
+### **Testing Workflow**
+1. Use CURL commands to test each endpoint individually.
+2. Verify responses against expected OpenAPI documentation.
+3. Log errors and validate against the backend logs for debugging.
+
+Would you like assistance with automating these CURL tests or further enhancements to the OpenAPI schema?
