@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from typing import List, Dict, Any, Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from services.vector_store import VectorStoreService
 from services.rag_service import RAGService
@@ -17,7 +17,7 @@ class ChatMessage(BaseModel):
     content: str
 
 class QueryRequest(BaseModel):
-    question: str
+    question: str = Field(..., description="The user's question")
     k: int = 5
     user_context: Optional[Dict[str, Any]] = None
     system_context: Optional[str] = None

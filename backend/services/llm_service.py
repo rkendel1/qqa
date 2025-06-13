@@ -130,3 +130,33 @@ class LLMService:
         except Exception as e:
             logger.error(f"Failed to get model info: {e}")
             return {}
+
+def query_minimal(
+    self,
+    question: str,
+    max_results: int = 3
+) -> Dict[str, Any]:
+    """Minimal version of query for quick testing"""
+    try:
+        # Retrieve context from vector store
+        context_sections = self.vector_service.get_context_sections(question, k=max_results)
+        
+        # Build a very simple prompt with minimal context
+        prompt = self._build_prompt(
+            retrieved_docs=context_sections.get("retrieved_docs", ""),
+            system_context="",  # no system context
+            user_context={},    # empty user context
+            chat_history=[],    # empty chat history
+            question=question,
+        )
+        
+        # Generate response without streaming
+        response = self.llm_service.generate_response(prompt, stream=False)
+        
+        return {
+            "response": response,
+            "num_sources": len(context_sections.get("sources", []))
+        }
+    except Exception as e:
+        logger.error(f"Minimal query failed: {e}")
+        raise RAGException(f"Minimal query failed: {e}")

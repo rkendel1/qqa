@@ -74,8 +74,8 @@ class VectorStoreService:
                     persist_directory=str(settings.CHROMA_DB_PATH),
                 )
             
-            logger.info(f"Initialized vector store with {len(self.vectorstore.get_collection().get_chunk_ids())} documents")
-                logger.info("Vector store initialized successfully")
+            
+            logger.info("Vector store initialized successfully")
         except Exception as e:
             logger.error(f"Failed to initialize vector store: {e}")
             self.vectorstore = None

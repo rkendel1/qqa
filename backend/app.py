@@ -6,6 +6,10 @@ import logging
 from fastapi import FastAPI, HTTPException, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.responses import StreamingResponse
+from fastapi import Body
+from models import QueryRequest
+from dependencies import get_rag_service
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
@@ -26,7 +30,15 @@ from api.user_routes import router as rag_router
 from users.models import User
 from users.auth import hash_password, verify_password
 from users.schemas import UserCreate, UserRead, UserLogin, Token
-from fastapi.responses import StreamingResponse
+
+users_router = auth_router
+
+
+app = FastAPI()
+
+app.include_router(auth_router, prefix="/auth", tags=["users"])
+app.include_router(rag_router, prefix="/api", tags=["RAG API"])
+
 
 
 
@@ -110,28 +122,28 @@ async def health_check(request: Request):
     return rag_service.get_status()
 
 @app.post("/query", response_model=QueryResponse)
-@limiter.limit(f"{settings.RATE_LIMIT_REQUESTS}/minute")  # or hour, second, etc
+@limiter.limit(f"{settings.RATE_LIMIT_REQUESTS}/minute")
 async def query(
     request: Request,
-    query_request: QueryRequest
+    query: QueryRequest = Body(...)
 ) -> Dict[str, Any]:
     """Query endpoint with rate limiting"""
     rag_service = request.app.state.rag_service
     try:
         with get_tracer().start_as_current_span("query_endpoint") as span:
-            span.set_attribute("query", query_request.query)
-            span.set_attribute("stream", query_request.stream)
+            span.set_attribute("query", query.question)
+            span.set_attribute("stream", query.stream)
             
             response = rag_service.query(
-                query=query_request.query,
-                user_context=query_request.user_context,
-                system_context=query_request.system_context or "",
-                chat_history=query_request.chat_history,
-                max_results=query_request.max_results,
-                stream=query_request.stream,
-                temperature=query_request.temperature,
-                max_tokens=query_request.max_tokens
-)
+                query=query.question,
+                user_context=query.user_context,
+                system_context=query.system_context or "",
+                chat_history=query.chat_history,
+                max_results=query.max_results,
+                stream=query.stream,
+                temperature=query.temperature,
+                max_tokens=query.max_tokens
+            )
             
             return response
     except RAGException as e:
@@ -141,18 +153,33 @@ async def query(
         logger.error(f"Unexpected error: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
 
+@app.post("/query_with_sanity_check")
+async def query_with_sanity_check(
+    request: QueryRequest,
+    rag_service=Depends(get_rag_service)
+):
+    result = rag_service.query_with_sanity_check(
+        question=request.question,
+        max_results=request.max_results or 5,
+        temperature=request.temperature or 0.7,
+        max_tokens=request.max_tokens or 512,
+    )
+    return result
 
 
-@router.post("/query/stream")
-async def stream_query_documents(request: QueryRequest, rag_service: RAGService = Depends(get_rag_service)):
+@app.post("/query/stream")
+async def stream_query_documents(
+    query: QueryRequest = Body(...),
+    rag_service: RAGService = Depends(get_rag_service)
+):
     response_generator = rag_service.query(
-        query=request.question,
-        user_context=request.user_context,
-        system_context=request.system_context,
-        chat_history=[msg.dict() for msg in request.chat_history] if request.chat_history else None,
-        max_results=request.k,
+        query=query.question,
+        user_context=query.user_context,
+        system_context=query.system_context,
+        chat_history=[msg.dict() for msg in query.chat_history] if query.chat_history else None,
+        max_results=query.k,
         stream=True
-    )  # This will return a generator from LLMService
+    )  # This returns a generator from LLMService
 
     return StreamingResponse(response_generator, media_type="text/event-stream")
 

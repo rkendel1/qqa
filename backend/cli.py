@@ -3,6 +3,8 @@ import logging
 from typing import Optional
 from services.rag_service import RAGService
 from exceptions import RAGException
+from services.vector_store import VectorStoreService
+from services.llm_service import LLMService
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -94,5 +96,8 @@ class CLI:
         print("  help/?  - Show this help message")
 
 if __name__ == "__main__":
-    cli = CLI(rag_service=RAGService())
+    vector_service = VectorStoreService()
+    llm_service = LLMService()
+    rag_service = RAGService(vector_service=vector_service, llm_service=llm_service)
+    cli = CLI(rag_service=rag_service)
     cli.run()

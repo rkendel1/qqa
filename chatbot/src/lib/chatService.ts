@@ -15,12 +15,18 @@ export async function generateCityHallResponse({
   
     const payload = {
       question: latestUserMessage?.content || '',
-      user_context: userContext,
       system_context: systemContext,
-      chat_history: chatHistory.map(m => ({ type: m.type, content: m.content })),
+      chat_history: chatHistory
+        .filter(
+          m =>
+            m.type !== 'assistant' ||
+            m.content !==
+              "Hello! I'm your City Hall Assistant. How can I help you today? You can ask me about permits, zoning, city services, or other municipal questions."
+        )
+        .map(m => ({ type: m.type, content: m.content })),
     };
   
-    const res = await fetch('http://localhost:8000/query-json', {
+    const res = await fetch('http://localhost:8000/query', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),

@@ -7,6 +7,9 @@ from services.vector_store import VectorStoreService
 from services.llm_service import LLMService
 from services.rag_service import RAGService
 
+from api.auth_routes import router as users_router
+from api.user_routes import router as rag_router
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -74,6 +77,9 @@ def start_api(service_manager: ServiceManager):
     app.state.rag_service = service_manager.rag_service
     app.state.vector_service = service_manager.vector_service
     app.state.llm_service = service_manager.llm_service
+
+    app.include_router(users_router, prefix="/users", tags=["users"])
+    app.include_router(rag_router, prefix="/api", tags=["RAG API"])
 
     logger.info("🚀 Starting API server...")
     uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)

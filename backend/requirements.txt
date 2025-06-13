@@ -43,5 +43,7 @@ ruff==0.2.2
 pydantic[email]
 passlib
 python-jose
-
+aiosqlite==0.18.0
+pypdf
+greenlet
 

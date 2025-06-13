@@ -193,3 +193,57 @@ class RAGService:
     
     def clear_cache(self):
         self.vector_service.clear_cache()
+        
+    def query_with_sanity_check(
+    self,
+    question: str,
+    max_results: int = 5,
+    temperature: float = 0.7,
+    max_tokens: int = 512,
+) -> Dict[str, Any]:
+        try:
+            # Step 1: Retrieve context from vector store
+            context_sections = self.vector_service.get_context_sections(question, k=max_results)
+
+            # Step 2: Build prompt for Ollama
+            prompt = self._build_prompt(
+                retrieved_docs=context_sections.get("retrieved_docs", ""),
+                system_context="",
+                user_context={},
+                chat_history=[],
+                question=question,
+            )
+
+            # Step 3: Generate response from Ollama
+            response = self.llm_service.generate_response(
+                prompt,
+                stream=False,
+                temperature=temperature,
+                max_tokens=max_tokens
+            )
+
+            # Step 4: Sanity check - Ask Ollama if the answer addresses the question
+            sanity_prompt = (
+                f"Please verify if the following answer appropriately addresses the question.\n"
+                f"Question: {question}\n"
+                f"Answer: {response}\n"
+                f"Respond with 'Yes' or 'No' and a brief explanation."
+            )
+
+            sanity_check = self.llm_service.generate_response(
+                sanity_prompt,
+                stream=False,
+                temperature=0.0,
+                max_tokens=100
+            )
+
+            return {
+                "response": response,
+                "sanity_check": sanity_check,
+                "sources": context_sections.get("sources", []),
+                "num_sources": len(context_sections.get("sources", []))
+            }
+
+        except Exception as e:
+            logger.error(f"Query with sanity check failed: {e}")
+            raise RAGException(f"Query with sanity check failed: {e}")
