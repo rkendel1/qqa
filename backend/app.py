@@ -72,8 +72,6 @@ class ServiceManager:
             "rag_service": self.rag_service
         }
 
-# Initialize FastAPI app
-app = FastAPI(title="RAG API")
 
 # Setup rate limiter
 limiter = Limiter(key_func=get_remote_address)
