@@ -1,7 +1,6 @@
 import sys
 import logging
-from pathlib import Path
-
+from typing import Optional
 from services.rag_service import RAGService
 from exceptions import RAGException
 
@@ -9,8 +8,17 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class CLI:
-    def __init__(self):
-        self.rag_service = RAGService()
+    def __init__(self, rag_service: RAGService):
+        self.rag_service = rag_service
+        self.commands = {
+            "quit": self._cmd_quit,
+            "exit": self._cmd_quit,
+            "q": self._cmd_quit,
+            "ingest": self._cmd_ingest,
+            "help": self._cmd_help,
+            "?": self._cmd_help,
+        }
+        self.running = True
     
     def run(self):
         """Run the CLI interface"""
@@ -19,41 +27,30 @@ class CLI:
         
         # Check system status
         status = self.rag_service.get_status()
-        if status["status"] != "healthy":
+        if status.get("status") != "healthy":
             print("❌ System not ready:")
-            print(f"   Vector Store: {'✅' if status['vector_store_ready'] else '❌'}")
-            print(f"   Ollama: {'✅' if status['ollama_available'] else '❌'}")
+            print(f"   Vector Store: {'✅' if status.get('vector_store_ready') else '❌'}")
+            print(f"   Ollama: {'✅' if status.get('ollama_available') else '❌'}")
             return
         
-        print(f"✅ System ready - {status['documents_ingested']} documents loaded")
-        print("\nCommands: 'quit' to exit, 'ingest' to process documents")
+        print(f"✅ System ready - {status.get('documents_ingested', 0)} documents loaded")
+        print("\nCommands: 'help' for list, 'quit' to exit, 'ingest' to process documents")
         print("=" * 50)
         
-        while True:
+        while self.running:
             try:
                 query = input("\n🤔 Your question: ").strip()
-                
-                if query.lower() in ['quit', 'exit', 'q']:
-                    print("👋 Goodbye!")
-                    break
-                
-                if query.lower() == 'ingest':
-                    count = self.rag_service.ingest_documents()
-                    print(f"✅ Processed {count} documents")
-                    continue
-                
                 if not query:
                     continue
                 
-                # Process query
-                result = self.rag_service.query(query)
+                # Check if the input is a command
+                cmd_func = self.commands.get(query.lower())
+                if cmd_func:
+                    cmd_func()
+                    continue
                 
-                print("\n" + "-" * 50)
-                print(f"🧠 Response:\n{result['response']}")
-                print(f"\n📋 Sources: {', '.join(result['sources'])}")
-                print(f"Documents used: {result['num_sources']}")
-                print(f"Processing time: {result['processing_time']:.2f}s")
-                print("-" * 50)
+                # Otherwise treat input as a natural language query
+                self._handle_query(query)
                 
             except KeyboardInterrupt:
                 print("\n👋 Goodbye!")
@@ -61,9 +58,41 @@ class CLI:
             except RAGException as e:
                 print(f"❌ Error: {e}")
             except Exception as e:
-                logger.error(f"Unexpected error: {e}")
-                print(f"❌ Unexpected error occurred")
+                logger.error(f"Unexpected error: {e}", exc_info=True)
+                print(f"❌ Unexpected error occurred. Check logs.")
+    
+    def _handle_query(self, query: str) -> None:
+        """Process a user query and print the results"""
+        print("Processing query, please wait...")
+        result = self.rag_service.query(query)
+        print("\n" + "-" * 50)
+        print(f"🧠 Response:\n{result.get('response', '[No response]')}")
+        sources = result.get('sources', [])
+        print(f"\n📋 Sources: {', '.join(sources) if sources else 'None'}")
+        print(f"Documents used: {result.get('num_sources', 0)}")
+        print(f"Processing time: {result.get('processing_time', 0):.2f}s")
+        print("-" * 50)
+    
+    def _cmd_quit(self) -> None:
+        """Exit the CLI"""
+        print("👋 Goodbye!")
+        self.running = False
+    
+    def _cmd_ingest(self) -> None:
+        """Run document ingestion process"""
+        print("Starting document ingestion...")
+        count = self.rag_service.ingest_documents()
+        print(f"✅ Processed {count} document{'s' if count != 1 else ''}")
+    
+    def _cmd_help(self) -> None:
+        """Show available commands"""
+        print("\nAvailable commands:")
+        print("  ingest  - Process all documents for ingestion")
+        print("  quit    - Exit the program")
+        print("  exit    - Exit the program")
+        print("  q       - Exit the program")
+        print("  help/?  - Show this help message")
 
 if __name__ == "__main__":
-    cli = CLI()
+    cli = CLI(rag_service=RAGService())
     cli.run()

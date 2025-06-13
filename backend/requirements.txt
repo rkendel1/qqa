@@ -1,0 +1,47 @@
+# Core Dependencies
+fastapi==0.110.0
+uvicorn==0.27.1
+pydantic==2.6.4
+pydantic-settings==2.2.1
+python-dotenv==1.0.1
+python-multipart==0.0.9
+fastapi-cors
+
+# RAG and Vector Store
+langchain
+langchain-community==0.0.27
+langchain-core==0.1.32
+chromadb==0.4.24
+sentence-transformers==2.5.1
+
+# LLM and Embeddings
+requests==2.31.0
+httpx==0.27.0
+
+# Monitoring and Observability
+prometheus-client==0.20.0
+opentelemetry-api==1.23.0
+opentelemetry-sdk==1.23.0
+opentelemetry-instrumentation-fastapi==0.44b0
+opentelemetry-exporter-otlp==1.23.0
+
+# Rate Limiting and Caching
+slowapi==0.1.9
+tenacity==8.2.3
+
+# Testing
+pytest==8.0.2
+pytest-asyncio==0.23.5
+pytest-cov==4.1.0
+
+# Development Tools
+black==24.2.0
+isort==5.13.2
+mypy==1.8.0
+ruff==0.2.2 
+
+pydantic[email]
+passlib
+python-jose
+
+

@@ -20,7 +20,7 @@ export async function generateCityHallResponse({
       chat_history: chatHistory.map(m => ({ type: m.type, content: m.content })),
     };
   
-    const res = await fetch('http://localhost:8000/query', {
+    const res = await fetch('http://localhost:8000/query-json', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),

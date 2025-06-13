@@ -1,16 +1,18 @@
-# dependencies.py
-
 from services.vector_store import VectorStoreService
 from services.llm_service import LLMService
 from services.rag_service import RAGService
 
+# Instantiate services
 vector_service = VectorStoreService()
 llm_service = LLMService()
-
 rag_service = RAGService(vector_service=vector_service, llm_service=llm_service)
 
-# This dictionary is populated during app startup
-app_services = {}
+# Populate app_services for dependency injection or app-wide access
+app_services = {
+    'vector_service': vector_service,
+    'llm_service': llm_service,
+    'rag_service': rag_service,
+}
 
 def get_vector_service() -> VectorStoreService:
     if 'vector_service' not in app_services:

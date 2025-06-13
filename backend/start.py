@@ -26,7 +26,7 @@ setup_environment()
 from services.vector_store import VectorStoreService
 from services.llm_service import LLMService  # Adjust import name as needed
 from services.rag_service import RAGService    # Adjust import name as needed
-from config import Config
+from config import settings
 from exceptions import VectorStoreException, DocumentProcessingException
 
 # Configure logging
@@ -40,7 +40,7 @@ class ServiceManager:
     """Manages initialization and startup of all services"""
     
     def __init__(self):
-        self.config = Config()
+        self.config = settings
         self.vector_service = None
         self.llm_service = None
         self.rag_service = None
@@ -63,7 +63,10 @@ class ServiceManager:
             
             # Initialize RAG Service
             logger.info("🔍 Initializing RAG Service...")
-            self.rag_service = RAGService()
+            self.rag_service = RAGService(
+                vector_service=self.vector_service,
+                llm_service=self.llm_service
+            )
             logger.info("✅ RAG Service initialized")
             
             self.services_initialized = True
@@ -153,11 +156,17 @@ def start_cli():
     
     # Start the CLI
     try:
-        subprocess.run([sys.executable, "cli.py"])
+        from cli import CLI
+        cli = CLI(rag_service=service_manager.rag_service)
+        cli.run()
     except KeyboardInterrupt:
         logger.info("🛑 CLI stopped by user")
     except Exception as e:
         logger.error(f"❌ CLI error: {e}")
+        
+def is_ready(self) -> bool:
+    """Health check for LLM service."""
+    return True
 
 def main():
     """Main entry point"""
